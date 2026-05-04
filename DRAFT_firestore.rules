@@ -15,11 +15,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isVerified() {
-       // Strong recommendation for production apps
-       return request.auth.token.email_verified == true;
-    }
-
     function isValidId(id) {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
@@ -32,9 +27,9 @@ service cloud.firestore {
       return resource.data;
     }
 
-    // Test connection
-    match /test/connection {
-      allow get: if true;
+    function isEmailVerified() {
+      // For this app, we assume Google login satisfies this, but strictly:
+      return request.auth.token.email_verified == true;
     }
 
     // --- Collection Rules ---

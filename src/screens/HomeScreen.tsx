@@ -5,7 +5,7 @@ import { CheckCircle2, Circle, Flame, Target, CalendarDays } from 'lucide-react'
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { doc, updateDoc, collection, addDoc, query, where, getDocs, deleteDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { cn } from '../lib/utils';
 import toast from 'react-hot-toast';
 
@@ -24,6 +24,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
       });
       toast.success(!currentStatus ? 'Task completed!' : 'Task uncompleted');
     } catch (e) {
+      handleFirestoreError(e, OperationType.WRITE, `tasks/${taskId}`);
       toast.error('Failed to update task');
     }
   };
@@ -41,7 +42,13 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           where('date', '==', todayStr)
         );
         const snapshot = await getDocs(q);
-        snapshot.forEach(async (d) => await deleteDoc(d.ref));
+        snapshot.forEach(async (d) => {
+          try {
+            await deleteDoc(d.ref);
+          } catch (e) {
+            handleFirestoreError(e, OperationType.DELETE, d.ref.path);
+          }
+        });
         
         // Update streak (decrement)
         const habit = habits.find(h => h.id === habitId);
@@ -70,9 +77,10 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
         }
         toast.success('Nice! Streak increased! 🔥');
       }
-    } catch (e) {
-      toast.error('Failed to update habit');
-    }
+      } catch (e) {
+        handleFirestoreError(e, isCompleted ? OperationType.DELETE : OperationType.WRITE, isCompleted ? 'habitCompletions' : 'habits');
+        toast.error('Failed to update habit');
+      }
   };
 
   const todayTasks = profile?.settings.focusMode ? tasks.filter(t => t.isFocusTask).slice(0, 3) : tasks;

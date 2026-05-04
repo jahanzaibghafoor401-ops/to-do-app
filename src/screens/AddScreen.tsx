@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../lib/AuthContext';
 import { ArrowLeft, Check, Calendar, Clock, Repeat, Target } from 'lucide-react';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { cn } from '../lib/utils';
@@ -29,7 +29,8 @@ export default function AddScreen({ onBack }: AddScreenProps) {
     setLoading(true);
     try {
       if (type === 'task') {
-        await addDoc(collection(db, 'tasks'), {
+        const path = 'tasks';
+        await addDoc(collection(db, path), {
           userId: user?.uid,
           name,
           completed: false,
@@ -40,7 +41,8 @@ export default function AddScreen({ onBack }: AddScreenProps) {
         });
         toast.success('Task added!');
       } else {
-        await addDoc(collection(db, 'habits'), {
+        const path = 'habits';
+        await addDoc(collection(db, path), {
           userId: user?.uid,
           name,
           frequency,
@@ -53,6 +55,7 @@ export default function AddScreen({ onBack }: AddScreenProps) {
       }
       onBack();
     } catch (e) {
+      handleFirestoreError(e, OperationType.WRITE, type === 'task' ? 'tasks' : 'habits');
       toast.error('Failed to save');
     } finally {
       setLoading(false);

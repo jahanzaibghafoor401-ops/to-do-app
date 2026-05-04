@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, handleFirestoreError, OperationType } from './firebase';
 import { useAuth } from './AuthContext';
 import { Task, Habit, HabitCompletion } from '../types';
 import { format } from 'date-fns';
@@ -16,10 +16,13 @@ export function useData() {
     if (!user) return;
 
     const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const tasksPath = 'tasks';
+    const habitsPath = 'habits';
+    const completionsPath = 'habitCompletions';
 
     // Subscribe to tasks for today
     const tasksQuery = query(
-      collection(db, 'tasks'),
+      collection(db, tasksPath),
       where('userId', '==', user.uid),
       where('date', '==', todayStr),
       orderBy('createdAt', 'desc')
@@ -27,22 +30,26 @@ export function useData() {
 
     const unsubscribeTasks = onSnapshot(tasksQuery, (snapshot) => {
       setTasks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, tasksPath);
     });
 
     // Subscribe to habits
     const habitsQuery = query(
-      collection(db, 'habits'),
+      collection(db, habitsPath),
       where('userId', '==', user.uid),
       where('active', '==', true)
     );
 
     const unsubscribeHabits = onSnapshot(habitsQuery, (snapshot) => {
       setHabits(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Habit)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, habitsPath);
     });
 
     // Subscribe to habit completions for today
     const completionsQuery = query(
-      collection(db, 'habitCompletions'),
+      collection(db, completionsPath),
       where('userId', '==', user.uid),
       where('date', '==', todayStr)
     );
@@ -50,6 +57,8 @@ export function useData() {
     const unsubscribeCompletions = onSnapshot(completionsQuery, (snapshot) => {
       setCompletions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as HabitCompletion)));
       setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, completionsPath);
     });
 
     return () => {

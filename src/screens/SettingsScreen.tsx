@@ -3,7 +3,7 @@ import { useAuth } from '../lib/AuthContext';
 import { logout } from '../lib/firebase';
 import { User, Shield, Moon, Bell, LogOut, Trash2, Smartphone, Target } from 'lucide-react';
 import { doc, updateDoc, collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { cn } from '../lib/utils';
 import toast from 'react-hot-toast';
 
@@ -18,6 +18,7 @@ export default function SettingsScreen() {
       });
       toast.success('Setting updated');
     } catch (e) {
+      handleFirestoreError(e, OperationType.WRITE, `users/${user.uid}`);
       toast.error('Failed to update setting');
     }
   };
@@ -29,10 +30,15 @@ export default function SettingsScreen() {
       const q = query(collection(db, 'habits'), where('userId', '==', user?.uid));
       const snapshot = await getDocs(q);
       snapshot.forEach(async (d) => {
-        await updateDoc(d.ref, { streak: 0, lastCompletedDate: null });
+        try {
+          await updateDoc(d.ref, { streak: 0, lastCompletedDate: null });
+        } catch (e) {
+          handleFirestoreError(e, OperationType.UPDATE, d.ref.path);
+        }
       });
       toast.success('All streaks reset');
     } catch (e) {
+      handleFirestoreError(e, OperationType.LIST, 'habits');
       toast.error('Failed to reset streaks');
     }
   };

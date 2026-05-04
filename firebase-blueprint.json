@@ -1,12 +1,12 @@
 {
   "entities": {
     "User": {
-      "title": "User",
-      "description": "User profile and settings",
+      "title": "User Profile",
+      "description": "User preferences and profile information",
       "type": "object",
       "properties": {
         "uid": { "type": "string" },
-        "email": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
         "displayName": { "type": "string" },
         "settings": {
           "type": "object",
@@ -14,73 +14,71 @@
             "focusMode": { "type": "boolean" },
             "theme": { "type": "string", "enum": ["light", "dark"] },
             "notificationsEnabled": { "type": "boolean" }
-          }
+          },
+          "required": ["focusMode", "theme", "notificationsEnabled"]
         }
       },
-      "required": ["uid", "email"]
+      "required": ["uid", "email", "settings"]
     },
     "Task": {
       "title": "Task",
-      "description": "Daily task for a user",
+      "description": "A daily task tracked by the user",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
         "userId": { "type": "string" },
         "name": { "type": "string" },
         "completed": { "type": "boolean" },
-        "date": { "type": "string", "format": "date" },
+        "date": { "type": "string", "description": "YYYY-MM-DD" },
         "reminderTime": { "type": "string" },
         "isFocusTask": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "number" }
       },
-      "required": ["userId", "name", "completed", "date"]
+      "required": ["userId", "name", "completed", "date", "isFocusTask", "createdAt"]
     },
     "Habit": {
       "title": "Habit",
-      "description": "Recurring habit for a user",
+      "description": "A recurring habit defined by the user",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
         "userId": { "type": "string" },
         "name": { "type": "string" },
         "frequency": { "type": "string", "enum": ["daily", "weekly", "custom"] },
         "reminderTime": { "type": "string" },
         "streak": { "type": "number" },
-        "lastCompletedDate": { "type": "string", "format": "date" },
+        "lastCompletedDate": { "type": "string" },
         "active": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "number" }
       },
-      "required": ["userId", "name", "frequency", "streak", "active"]
+      "required": ["userId", "name", "frequency", "streak", "active", "createdAt"]
     },
     "HabitCompletion": {
       "title": "Habit Completion",
-      "description": "Log of a habit completion for a specific date",
+      "description": "A specific instance of a habit completed on a date",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
         "habitId": { "type": "string" },
         "userId": { "type": "string" },
-        "date": { "type": "string", "format": "date" }
+        "date": { "type": "string" }
       },
       "required": ["habitId", "userId", "date"]
     }
   },
   "firestore": {
-    "users/{userId}": {
+    "/users/{userId}": {
       "schema": "User",
-      "description": "User profile and settings"
+      "description": "Global user profiles"
     },
-    "tasks/{taskId}": {
+    "/tasks/{taskId}": {
       "schema": "Task",
       "description": "User tasks"
     },
-    "habits/{habitId}": {
+    "/habits/{habitId}": {
       "schema": "Habit",
-      "description": "User habits"
+      "description": "User habit definitions"
     },
-    "habitCompletions/{completionId}": {
+    "/habitCompletions/{completionId}": {
       "schema": "HabitCompletion",
-      "description": "History of habit completions"
+      "description": "Historical habit completion records"
     }
   }
 }

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { auth, db, handleFirestoreError, OperationType } from './firebase';
 import { UserProfile } from '../types';
 
 interface AuthContextType {
@@ -43,12 +43,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (doc.exists()) {
               setProfile(doc.data() as UserProfile);
             }
+          }, (error) => {
+            handleFirestoreError(error, OperationType.GET, userDocRef.path);
           });
         }
       } else {
         setProfile(null);
       }
       setLoading(false);
+    }, (error) => {
+       console.error("Auth state change error:", error);
+       setLoading(false);
     });
 
     return () => unsubscribe();
