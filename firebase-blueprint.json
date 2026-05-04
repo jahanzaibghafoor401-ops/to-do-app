@@ -1,0 +1,86 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and settings",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "focusMode": { "type": "boolean" },
+            "theme": { "type": "string", "enum": ["light", "dark"] },
+            "notificationsEnabled": { "type": "boolean" }
+          }
+        }
+      },
+      "required": ["uid", "email"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Daily task for a user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "date": { "type": "string", "format": "date" },
+        "reminderTime": { "type": "string" },
+        "isFocusTask": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "completed", "date"]
+    },
+    "Habit": {
+      "title": "Habit",
+      "description": "Recurring habit for a user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "frequency": { "type": "string", "enum": ["daily", "weekly", "custom"] },
+        "reminderTime": { "type": "string" },
+        "streak": { "type": "number" },
+        "lastCompletedDate": { "type": "string", "format": "date" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "frequency", "streak", "active"]
+    },
+    "HabitCompletion": {
+      "title": "Habit Completion",
+      "description": "Log of a habit completion for a specific date",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "habitId": { "type": "string" },
+        "userId": { "type": "string" },
+        "date": { "type": "string", "format": "date" }
+      },
+      "required": ["habitId", "userId", "date"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profile and settings"
+    },
+    "tasks/{taskId}": {
+      "schema": "Task",
+      "description": "User tasks"
+    },
+    "habits/{habitId}": {
+      "schema": "Habit",
+      "description": "User habits"
+    },
+    "habitCompletions/{completionId}": {
+      "schema": "HabitCompletion",
+      "description": "History of habit completions"
+    }
+  }
+}
